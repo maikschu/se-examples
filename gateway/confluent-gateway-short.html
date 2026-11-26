@@ -1,0 +1,494 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Confluent Gateway</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one key message per slide. Headline + up to three short bubbles on the left, a live "route switch" diagram on the right. */
+:root{
+  --bg:#F5F7FC; --surface:#FFFFFF; --ink:#0B1030; --muted:#525A7A; --line:#D9DEEC;
+  --accent:#1D4ED8; --accent-soft:#E3EAFE; --ok:#0E8F63; --warn:#D9480F; --warn-soft:#FDECE3;
+  --dot:#1D4ED8; --gw:#0B1030; --gw-ink:#FFFFFF;
+  --f-display:"Poppins",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Inter",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#070A1F; --surface:#0F1433; --ink:#EEF1FF; --muted:#A3ABCF; --line:#262D57;
+  --accent:#7EA2FF; --accent-soft:#18215A; --ok:#3DD39A; --warn:#FF8A4C; --warn-soft:#3A1B12;
+  --dot:#7EA2FF; --gw:#EEF1FF; --gw-ink:#070A1F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#070A1F; --surface:#0F1433; --ink:#EEF1FF; --muted:#A3ABCF; --line:#262D57;
+  --accent:#7EA2FF; --accent-soft:#18215A; --ok:#3DD39A; --warn:#FF8A4C; --warn-soft:#3A1B12;
+  --dot:#7EA2FF; --gw:#EEF1FF; --gw-ink:#070A1F; color-scheme:dark}
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55}
+.app{height:100%;display:flex;flex-direction:column}
+.bar{display:flex;align-items:center;gap:16px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line)}
+.brand{font-family:var(--f-display);font-weight:600;font-size:15px;letter-spacing:.01em}
+.brand span{color:var(--accent)}
+.bar .count{margin-left:auto;font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.progress{height:3px;background:var(--line)}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .5s ease}
+
+.stage{flex:1;overflow:auto;position:relative}
+.slide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(24px,4vw,64px);align-items:center;max-width:1240px;margin:0 auto;min-height:100%;padding-block:clamp(24px,4vh,56px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.slide[hidden]{display:none!important}
+.slide.wide{grid-template-columns:minmax(0,1fr)}
+.copy{display:flex;flex-direction:column;gap:22px;min-width:0}
+.eyebrow{font-family:var(--f-mono);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--f-display);font-weight:700;letter-spacing:-.02em;line-height:1.08;text-wrap:balance;margin:0}
+h1{font-size:clamp(36px,5.2vw,64px)}
+h2{font-size:clamp(32px,4.2vw,54px)}
+.mono{font-family:var(--f-mono);font-size:.88em;font-weight:500}
+
+/* key-point bubbles: three max, a few words each */
+.pts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.pts li{display:flex;align-items:center;gap:12px;background:var(--accent-soft);border-radius:4px 18px 18px 18px;padding:12px 20px;font:600 clamp(16px,1.45vw,19px)/1.3 var(--f-display);max-width:100%}
+.pts li::before{content:"";width:9px;height:9px;border-radius:99px;background:var(--accent);flex:none}
+.pts.row{flex-direction:row;flex-wrap:wrap}
+.pts a{color:inherit;text-decoration:none}
+.pts a:hover{text-decoration:underline}
+.pts a span{color:var(--accent);margin-left:6px}
+.note{font-size:12.5px;color:var(--muted);margin:0}
+.note a{color:inherit}
+
+.viz{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.viz svg{width:100%;height:auto;display:block;max-width:100%}
+.viz-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.state{font-family:var(--f-mono);font-size:13px;color:var(--muted);flex:1;min-width:0}
+.state .chip{display:inline-block;padding:2px 8px;border-radius:99px;margin-right:8px;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent)}
+.phase-1 .state .chip{background:var(--warn-soft);color:var(--warn)}
+.flip{font:600 14px var(--f-body);color:var(--gw-ink);background:var(--gw);border:0;border-radius:99px;padding:9px 16px;cursor:pointer}
+.flip:hover{filter:brightness(1.15)}
+.flip:focus-visible,.nav button:focus-visible,.dots button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.stat{display:flex;align-items:baseline;gap:14px}
+.stat strong{font-family:var(--f-display);font-size:clamp(52px,6vw,76px);line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.stat span{font:600 clamp(16px,1.45vw,19px)/1.3 var(--f-display)}
+
+/* SVG diagram */
+.d-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.d-label{fill:var(--ink);font:600 13px var(--f-body)}
+.d-sub{fill:var(--muted);font:400 10.5px var(--f-mono)}
+.d-pre{fill:var(--accent);font-weight:600}
+.pre{color:var(--accent);font-weight:700}
+.d-gw{fill:var(--gw)}
+.d-gw-t{fill:var(--gw-ink);font:600 14px var(--f-display)}
+.d-gw-s{fill:var(--gw-ink);opacity:.75;font:400 10px var(--f-mono)}
+.d-path{fill:none;stroke:var(--accent);stroke-width:2;opacity:.35}
+.d-pain{fill:none;stroke:var(--warn);stroke-width:2;stroke-dasharray:5 5;opacity:.9}
+.d-dot{fill:var(--dot)}
+.d-link{fill:none;stroke:var(--ok);stroke-width:2;stroke-dasharray:3 6;animation:dash 1.2s linear infinite}
+.d-link-t{fill:var(--ok);font:500 10.5px var(--f-mono)}
+.d-fail .d-box{stroke:var(--warn);fill:var(--warn-soft)}
+.d-x{stroke:var(--warn);stroke-width:3;stroke-linecap:round}
+.d-cap{fill:var(--warn);font:600 11px var(--f-mono)}
+.d-lane{fill:var(--accent-soft);stroke:none}
+.d-lane-t{fill:var(--accent);font:500 10px var(--f-mono)}
+.d-idp{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5}
+.d-zone{fill:var(--muted);font:500 10px var(--f-mono);letter-spacing:.1em}
+.d-map{fill:var(--accent);font:500 10px var(--f-mono)}
+.ph{transition:opacity .6s ease}
+.p1,.p1-only{opacity:0}
+.phase-1 .p0,.phase-1 .p0-only{opacity:0}
+.phase-1 .p1,.phase-1 .p1-only{opacity:1}
+.fail-on-1 .d-x,.fail-on-1 .d-cap{opacity:0;transition:opacity .4s}
+.phase-1 .fail-on-1 .d-x,.phase-1 .fail-on-1 .d-cap{opacity:1}
+.phase-1 .fail-on-1 .d-box{stroke:var(--warn);fill:var(--warn-soft)}
+.fail-on-1 .d-box{transition:fill .4s,stroke .4s}
+.t-move{transition:transform .7s cubic-bezier(.6,0,.2,1)}
+@keyframes dash{to{stroke-dashoffset:-18}}
+
+/* entrance: starts visible-ish, never from 0 */
+.slide.enter .copy>*,.slide.enter .pts li{animation:rise .55s cubic-bezier(.2,.7,.2,1) backwards}
+.slide.enter .copy>*:nth-child(2){animation-delay:.05s}
+.slide.enter .pts li:nth-child(1){animation-delay:.15s}
+.slide.enter .pts li:nth-child(2){animation-delay:.25s}
+.slide.enter .pts li:nth-child(3){animation-delay:.35s}
+.slide.enter .viz{animation:rise .7s .1s cubic-bezier(.2,.7,.2,1) backwards}
+@keyframes rise{from{opacity:.35;transform:translateY(14px)}}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card h3{font-family:var(--f-display);font-size:21px;margin:0;line-height:1.2}
+.card .tag{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.card p{margin:0;color:var(--muted);font-size:15px}
+.sources{font-size:12px;color:var(--muted);columns:2 300px;column-gap:32px;margin:12px 0 0;padding-left:18px;border-top:1px dashed var(--line);padding-top:12px}
+.sources a{color:var(--muted)}
+
+/* nav */
+.nav{display:flex;align-items:center;gap:12px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-top:1px solid var(--line);padding-bottom:max(10px,env(safe-area-inset-bottom,0px))}
+.nav>button{font:600 14px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:99px;padding:8px 16px;cursor:pointer;flex:none}
+.nav>button:disabled{opacity:.4;cursor:default}
+.dots{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap;min-width:0}
+.dots button{width:26px;height:26px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--muted);font:500 10.5px var(--f-mono);cursor:pointer;padding:0}
+.dots button[aria-current="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.keys{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+
+@media (max-width:860px){
+  .slide{grid-template-columns:minmax(0,1fr);align-items:start}
+  .cards{grid-template-columns:minmax(0,1fr)}
+  .keys{display:none}
+  .dots button{width:22px;height:22px;font-size:9.5px}
+}
+@media (prefers-reduced-motion:reduce){
+  .slide.enter .copy>*,.slide.enter .pts li,.slide.enter .viz{animation:none}
+  .d-link{animation:none}
+  .ph,.t-move,.progress i{transition:none}
+}
+</style>
+
+<div class="app">
+  <header class="bar">
+    <div class="brand">Confluent <span>Gateway</span></div>
+    <div class="count" id="count">1 / 8</div>
+  </header>
+  <div class="progress"><i id="prog"></i></div>
+
+  <main class="stage" id="stage">
+
+    <!-- 1 -->
+    <section class="slide" id="intro" data-flip="Swap the cluster" data-cap0="Apps use kafka.acme.com · cluster A answers" data-cap1="Apps still use kafka.acme.com · cluster B answers">
+      <div class="copy">
+        <div class="eyebrow">Confluent Gateway</div>
+        <h1>One front door for all your Kafka.</h1>
+        <ul class="pts">
+          <li>Switch clusters without app changes</li>
+          <li>Secure and share access in one place</li>
+          <li>One address, or one per business unit</li>
+        </ul>
+      </div>
+      <div class="viz" data-diagram="intro"></div>
+    </section>
+
+    <!-- 2 -->
+    <section class="slide" id="problem" data-flip="Move to a new cluster" data-cap0="5 apps wired straight to cluster A" data-cap1="New cluster = 5 teams · 5 changes · 5 restarts">
+      <div class="copy">
+        <div class="eyebrow">The problem</div>
+        <h2>Every Kafka change is a project for every app team.</h2>
+        <ul class="pts">
+          <li>Each app hard-wires the cluster address</li>
+          <li>Every change: reconfigure, restart, retest</li>
+          <li>Recovery waits for the slowest team</li>
+        </ul>
+      </div>
+      <div class="viz" data-diagram="problem"></div>
+    </section>
+
+    <!-- 3 -->
+    <section class="slide" id="outage" data-flip="Simulate outage" data-cap0="Region A serving · region B kept in sync" data-cap1="Region A down · route flipped · apps carry on">
+      <div class="copy">
+        <div class="eyebrow">Cloud outage</div>
+        <h2>Region down? Flip the route. Apps keep running.</h2>
+        <ul class="pts">
+          <li>Continuous sync with Cluster Linking</li>
+          <li>You choose when to switch over</li>
+          <li>No restarts, no config changes</li>
+        </ul>
+      </div>
+      <div class="viz" data-diagram="outage"></div>
+    </section>
+
+    <!-- 4 -->
+    <section class="slide" id="exit" data-flip="Flip the switch" data-cap0="Running on Confluent Cloud · copy in own DC" data-cap1="Switched to own data center · apps unchanged">
+      <div class="copy">
+        <div class="eyebrow">Sovereignty</div>
+        <h2>A rehearsed way out of the public cloud.</h2>
+        <ul class="pts">
+          <li>Synced copy in your own data center</li>
+          <li>Switch the route, apps unchanged</li>
+          <li>Works in both directions</li>
+        </ul>
+      </div>
+      <div class="viz" data-diagram="exit"></div>
+    </section>
+
+    <!-- 5 -->
+    <section class="slide" id="migrate" data-flip="Cut over" data-cap0="Apps on today's Kafka · data copying across" data-cap1="Apps on Confluent Cloud · one route change">
+      <div class="copy">
+        <div class="eyebrow">Migrations and upgrades</div>
+        <h2>Move to Confluent Cloud without a big-bang cut-over.</h2>
+        <ul class="pts">
+          <li>From MSK or any Kafka</li>
+          <li>App teams stay out of the plan</li>
+          <li>Roll back in one step</li>
+        </ul>
+      </div>
+      <div class="viz" data-diagram="migrate"></div>
+    </section>
+
+    <!-- 7 -->
+    <section class="slide" id="multi-tenancy" data-flip="Consolidate" data-cap0="A cluster per team · 4 clusters to run" data-cap1="One shared cluster · 4 isolated tenants">
+      <div class="copy">
+        <div class="eyebrow">Multi-tenancy · Confluent Private Cloud</div>
+        <h2>One shared platform instead of a cluster per team.</h2>
+        <div class="stat"><span>up to</span><strong>73%</strong><span>fewer brokers</span></div>
+        <ul class="pts">
+          <li>Isolated tenants, own quotas</li>
+          <li>Own address per tenant</li>
+        </ul>
+        <p class="note">Confluent's published <a href="https://www.confluent.io/blog/cpc-innovation-benchmarking/" target="_blank" rel="noopener">CPC benchmark</a>. Your result depends on your workloads.</p>
+      </div>
+      <div class="viz" data-diagram="mt"></div>
+    </section>
+
+    <!-- access -->
+    <section class="slide" id="access" data-flip="Onboard a partner" data-cap0="Partner on its own route with mTLS · internal apps on OAuth" data-cap1="Partner B added · cert mapped to an OAuth identity">
+      <div class="copy">
+        <div class="eyebrow">Partner access · central security</div>
+        <h2>Let partners in through their own door.</h2>
+        <ul class="pts">
+          <li>Own route for partners, network of your choice</li>
+          <li>mTLS outside, OAuth inside</li>
+          <li>Each identity mapped, secrets in your vault</li>
+        </ul>
+      </div>
+      <div class="viz" data-diagram="access"></div>
+    </section>
+    <!-- 10 -->
+    <section class="slide wide" id="which" data-noviz>
+      <div class="copy">
+        <div class="eyebrow">Which Gateway</div>
+        <h2>Three products. Pick the one that fits.</h2>
+        <div class="cards">
+          <div class="card"><span class="tag">Confluent Private Cloud</span><h3>Everything included</h3><p>Gateway, CSFLE, multi-tenancy and high performance built in</p></div>
+          <div class="card"><span class="tag">CP Gateway</span><h3>Gateway only</h3><p>Just the Gateway, nothing else</p></div>
+          <div class="card"><span class="tag">CC Gateway</span><h3>Confluent Cloud only</h3><p>When every route points to Confluent Cloud</p></div>
+        </div>
+        <ul class="pts row">
+          <li>Generally available</li>
+          <li>Free trial for a proof of concept</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="nav" aria-label="Slides">
+    <button id="prev" type="button">← Back</button>
+    <div class="dots" id="dots"></div>
+    <span class="keys">← → to move · F to flip</span>
+    <button id="next" type="button">Next →</button>
+  </nav>
+</div>
+
+<script>
+(function(){
+const NS="http://www.w3.org/2000/svg";
+const reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e}
+let uid=0;
+
+/* Layout constants (viewBox 600 x 330) */
+const SX=12,SW=128,SH=40,GX=242,GW=116,TX=452,TW=136,TH=58,GY=165;
+function ys(n,top,bottom){if(n===1)return[(top+bottom)/2];const a=[];for(let i=0;i<n;i++)a.push(top+(bottom-top)*i/(n-1));return a}
+
+function cls(show){if(!show)return"ph";return"ph "+(show.length===1?(show[0]===0?"p0":"p1"):"")}
+
+function build(host,spec){
+  const svg=el("svg",{viewBox:"0 0 600 330",role:"img","aria-label":spec.aria});
+  host.appendChild(svg);
+  const sy=spec.sy||ys(spec.sources.length,50,280);
+  const ty=spec.ty||ys(spec.targets.length,70,260);
+  const paths=el("g",{},svg), links=el("g",{},svg), nodes=el("g",{},svg);
+
+  // replication link
+  if(spec.link){const [a,b]=spec.link;const x=TX+TW+2;
+    const pid="l"+(uid++);
+    el("path",{class:"d-link",d:`M${x-4} ${ty[a]+TH/2-6} C${x+10} ${ty[a]+40}, ${x+10} ${ty[b]-40}, ${x-4} ${ty[b]-TH/2+6}`},links);
+    const t=el("text",{class:"d-link-t",x:TX+TW/2,y:(ty[a]+ty[b])/2+4,"text-anchor":"middle"},links,spec.linkLabel||"Cluster Linking");
+  }
+
+  // routes per phase
+  [0,1].forEach(ph=>{
+    const g=el("g",{class:"ph "+(ph===0?"p0":"p1")},paths);
+    (spec.routes[ph]||[]).forEach(r=>{
+      const [s,t,kind]=r; const y1=sy[s], y2=ty[t];
+      const direct=spec.direct&&spec.direct[ph];
+      const d=direct?`M${SX+SW} ${y1} C${SX+SW+170} ${y1}, ${TX-170} ${y2}, ${TX} ${y2}`
+                    :`M${SX+SW} ${y1} C${SX+SW+60} ${y1}, ${GX-60} ${GY}, ${GX} ${GY} L${GX+GW} ${GY} C${GX+GW+60} ${GY}, ${TX-60} ${y2}, ${TX} ${y2}`;
+      const id="p"+(uid++);
+      el("path",{id,class:kind==="pain"?"d-pain":"d-path",d},g);
+      if(kind!=="pain"&&!reduce){
+        for(let k=0;k<3;k++){const c=el("circle",{class:"d-dot",r:4},g);
+          const am=el("animateMotion",{dur:"2.6s",repeatCount:"indefinite",begin:(-k*0.87).toFixed(2)+"s"},c);
+          el("mpath",{href:"#"+id},am);}
+      }
+      if(kind==="pain"){el("text",{class:"d-cap",x:(SX+SW+TX)/2,y:(y1+y2)/2-4,"text-anchor":"middle"},g,spec.painLabel||"reconfigure");}
+    });
+  });
+
+  // sources
+  spec.sources.forEach((s,i)=>{
+    const g=el("g",{class:cls(s.show)},nodes);
+    el("rect",{class:"d-box",x:SX,y:sy[i]-SH/2,width:SW,height:SH,rx:9},g);
+    el("text",{class:"d-label",x:SX+12,y:sy[i]+(s.sub?-2:5)},g,s.label);
+    if(s.sub){const st=el("text",{class:"d-sub",x:SX+12,y:sy[i]+12},g);
+      if(s.pre)el("tspan",{class:"d-pre"},st,s.pre);
+      el("tspan",{},st,s.sub);}
+  });
+
+  // gateway
+  if(spec.gw){
+    const g=el("g",{class:spec.gw.show?cls(spec.gw.show):""},nodes);
+    el("rect",{class:"d-gw",x:GX,y:GY-52,width:GW,height:104,rx:16},g);
+    el("text",{class:"d-gw-t",x:GX+GW/2,y:GY-10,"text-anchor":"middle"},g,spec.gw.label||"Gateway");
+    (spec.gw.sub||[]).forEach((t,i)=>el("text",{class:"d-gw-s",x:GX+GW/2,y:GY+10+i*14,"text-anchor":"middle"},g,t));
+  }
+
+  // targets
+  spec.targets.forEach((t,i)=>{
+    const h=t.h||TH, y=ty[i]-h/2;
+    const g=el("g",{class:cls(t.show)+(t.failOn1?" fail-on-1":"")},nodes);
+    el("rect",{class:"d-box",x:TX,y,width:TW,height:h,rx:11},g);
+    if(t.lanes){
+      const lh=(h-44)/t.lanes.length;
+      t.lanes.forEach((ln,j)=>{el("rect",{class:"d-lane",x:TX+10,y:y+34+j*lh,width:TW-20,height:lh-5,rx:5},g);
+        el("text",{class:"d-lane-t",x:TX+18,y:y+34+j*lh+lh/2+1},g,ln);});
+      el("text",{class:"d-label",x:TX+12,y:y+21},g,t.label);
+    }else{
+      el("text",{class:"d-label",x:TX+12,y:ty[i]-3},g,t.label);
+      if(t.sub)el("text",{class:"d-sub",x:TX+12,y:ty[i]+13},g,t.sub);
+    }
+    if(t.failOn1){
+      const cx=TX+TW-18,cy=y+16;
+      el("line",{class:"d-x",x1:cx-7,y1:cy-7,x2:cx+7,y2:cy+7},g);
+      el("line",{class:"d-x",x1:cx+7,y1:cy-7,x2:cx-7,y2:cy+7},g);
+      el("text",{class:"d-cap",x:TX+TW/2,y:y+h+16,"text-anchor":"middle"},g,t.failLabel||"OUTAGE");
+    }
+  });
+  if(spec.extra)spec.extra(nodes);
+  return svg;
+}
+
+const apps5=[{label:"Orders"},{label:"Payments"},{label:"Stock"},{label:"Pricing"},{label:"Vendor app"}];
+const apps3=[{label:"Orders",sub:"kafka.acme.com"},{label:"Payments",sub:"kafka.acme.com"},{label:"Stock",sub:"kafka.acme.com"}];
+const all=(n,t)=>Array.from({length:n},(_,i)=>[i,t]);
+
+const SPECS={
+  intro:{aria:"Three apps connect to one Gateway address, which routes to cluster A or cluster B",
+    sources:apps3,gw:{sub:["kafka.acme.com"]},
+    targets:[{label:"Cluster A",sub:"today"},{label:"Cluster B",sub:"tomorrow"}],
+    routes:{0:all(3,0),1:all(3,1)}},
+  problem:{aria:"Five apps wired directly to cluster A; moving to cluster B breaks every connection",
+    sources:apps5,targets:[{label:"Cluster A",sub:"old address"},{label:"Cluster B",sub:"new address"}],
+    direct:{0:true,1:true},painLabel:"",
+    routes:{0:all(5,0),1:all(5,1).map(r=>[r[0],r[1],"pain"])}},
+  outage:{aria:"Apps route through Gateway to region A; when region A fails, Gateway routes to region B kept in sync by Cluster Linking",
+    sources:apps3,gw:{sub:["kafka.acme.com"]},link:[0,1],
+    targets:[{label:"Cloud region A",sub:"primary",failOn1:true,failLabel:"REGION OUTAGE"},{label:"Region B",sub:"or another cloud"}],
+    routes:{0:all(3,0),1:all(3,1)}},
+  exit:{aria:"Apps route through Gateway to Confluent Cloud; on switch, Gateway routes to Confluent Private Cloud in the customer's data center",
+    sources:apps3,gw:{sub:["kafka.acme.com"]},link:[0,1],
+    targets:[{label:"Confluent Cloud",sub:"public cloud",failOn1:true,failLabel:"SWITCHED OFF"},{label:"Private Cloud",sub:"your data center"}],
+    routes:{0:all(3,0),1:all(3,1)}},
+  migrate:{aria:"Apps route through Gateway to today's Kafka; after cut-over, Gateway routes to Confluent Cloud",
+    sources:apps3,gw:{sub:["kafka.acme.com"]},link:[0,1],linkLabel:"copying",
+    targets:[{label:"Kafka today",sub:"on-prem / MSK"},{label:"Confluent Cloud",sub:"target"}],
+    routes:{0:all(3,0),1:all(3,1)}},
+  bu:{aria:"Sales, Finance and Logistics each use their own address on the Gateway; Finance moves to another cluster without affecting others",
+    sources:[{label:"Sales",pre:"sales",sub:".kafka…"},{label:"Finance",pre:"finance",sub:".kafka…"},{label:"Logistics",pre:"logistics",sub:".kafka…"}],
+    gw:{sub:["3 addresses","1 Gateway"]},
+    targets:[{label:"Cluster EU",sub:"shared"},{label:"Cluster CH",sub:"regulated"}],
+    routes:{0:[[0,0],[1,0],[2,1]],1:[[0,0],[1,1],[2,1]]}},
+  mt:{aria:"Four teams each with their own cluster, consolidated into one shared cluster with four isolated logical clusters",
+    sources:[{label:"Sales"},{label:"Finance"},{label:"Logistics"},{label:"HR"}],
+    gw:{sub:["1 address","per tenant"]},
+    ty:[48,126,204,282,165],
+    targets:[{label:"Cluster 1",h:40,show:[0]},{label:"Cluster 2",h:40,show:[0]},{label:"Cluster 3",h:40,show:[0]},{label:"Cluster 4",h:40,show:[0]},
+      {label:"1 shared cluster",h:210,show:[1],lanes:["tenant · sales","tenant · finance","tenant · logistics","tenant · hr"]}],
+    routes:{0:[[0,0],[1,1],[2,2],[3,3]],1:[[0,4],[1,4],[2,4],[3,4]]}},
+  partners:{aria:"Internal apps and partners connect via their own Gateway addresses to a private cluster",
+    sources:[{label:"Internal apps",sub:"kafka.acme.com"},{label:"Partner A",pre:"ext",sub:".kafka.acme.com"},{label:"Partner B",sub:"new · own login",show:[1]}],
+    gw:{sub:["own address","own login"]},
+    targets:[{label:"Kafka",sub:"private network 🔒"}],
+    routes:{0:[[0,0],[1,0]],1:[[0,0],[1,0],[2,0]]}},
+  access:{aria:"Partners use their own route with mTLS certificates trusted by an external CA; internal apps use their own route with OAuth; Gateway maps each partner certificate to an internal identity and connects to Kafka with OAuth tokens from the internal identity provider",
+    sources:[{label:"Partner A",pre:"ext",sub:".kafka.acme.com"},{label:"Partner B",pre:"ext",sub:".kafka.acme.com",show:[1]},{label:"Internal apps",sub:"kafka.acme.com"}],
+    sy:[120,190,260],ty:[215],
+    gw:{sub:["2 routes","cert → OAuth"]},
+    targets:[{label:"Kafka",sub:"OAuth only"}],
+    extra:g=>{
+      const ext=el("g",{},g);
+      el("rect",{class:"d-idp",x:SX,y:22,width:SW,height:46,rx:9},ext);
+      el("text",{class:"d-label",x:SX+12,y:42},ext,"External CA");
+      el("text",{class:"d-sub",x:SX+12,y:57},ext,"partner certs");
+      const int=el("g",{},g);
+      el("rect",{class:"d-idp",x:TX,y:22,width:TW,height:46,rx:9},int);
+      el("text",{class:"d-label",x:TX+12,y:42},int,"Internal IdP");
+      el("text",{class:"d-sub",x:TX+12,y:57},int,"OAuth · Entra ID");
+      el("path",{class:"d-link",d:`M${SX+SW} 45 C${GX-20} 45, ${GX+28} 60, ${GX+28} ${GY-52}`},g);
+      el("path",{class:"d-link",d:`M${TX} 45 C${GX+GW+20} 45, ${GX+GW-28} 60, ${GX+GW-28} ${GY-52}`},g);
+      el("text",{class:"d-link-t",x:(SX+SW+GX)/2+6,y:34,"text-anchor":"middle"},g,"trusts certs");
+      el("text",{class:"d-link-t",x:(GX+GW+TX)/2-6,y:34,"text-anchor":"middle"},g,"issues tokens");
+      el("text",{class:"d-zone",x:SX,y:318},g,"ROUTES · ext = mTLS · internal = OAuth");
+      el("text",{class:"d-zone",x:TX+TW,y:318,"text-anchor":"end"},g,"INSIDE · OAuth");
+      const m=el("g",{class:"ph p1"},g);
+      el("text",{class:"d-map",x:GX+GW/2,y:GY+72,"text-anchor":"middle"},m,"CN=partner-a → sa-partner-a");
+      el("text",{class:"d-map",x:GX+GW/2,y:GY+88,"text-anchor":"middle"},m,"CN=partner-b → sa-partner-b");
+    },
+    routes:{0:[[0,0],[2,0]],1:all(3,0)}}
+};
+
+const slides=[...document.querySelectorAll(".slide")];
+const dots=document.getElementById("dots");
+const count=document.getElementById("count");
+const prog=document.getElementById("prog");
+const stage=document.getElementById("stage");
+let cur=0,timer=null,hold=0;
+
+slides.forEach((s,i)=>{
+  const viz=s.querySelector("[data-diagram]");
+  if(viz){
+    build(viz,SPECS[viz.dataset.diagram]);
+    const foot=document.createElement("div");foot.className="viz-foot";
+    foot.innerHTML=`<div class="state"><span class="chip">before</span><span class="cap"></span></div><button class="flip" type="button" id="flip-${s.id}"></button>`;
+    viz.appendChild(foot);
+    foot.querySelector(".flip").textContent=s.dataset.flip||"Flip";
+    foot.querySelector(".flip").addEventListener("click",()=>{flip(s);hold=Date.now()+9000});
+    setPhase(s,0);
+  }
+  const b=document.createElement("button");b.type="button";b.textContent=i+1;b.setAttribute("aria-label","Slide "+(i+1)+": "+(s.querySelector("h1,h2").textContent));
+  b.addEventListener("click",()=>go(i));dots.appendChild(b);
+});
+
+function setPhase(s,p){
+  const viz=s.querySelector(".viz");if(!viz)return;
+  viz.classList.toggle("phase-1",p===1);s.dataset.phase=p;
+  const cap=viz.querySelector(".cap"),chip=viz.querySelector(".chip"),btn=viz.querySelector(".flip");
+  if(cap)cap.textContent=p?s.dataset.cap1:s.dataset.cap0;
+  if(chip)chip.textContent=p?"after":"before";
+  if(btn)btn.textContent=p?"Reset":(s.dataset.flip||"Flip");
+}
+function flip(s){setPhase(s,s.dataset.phase==="1"?0:1)}
+
+function go(i,fromHash){
+  i=Math.max(0,Math.min(slides.length-1,i));cur=i;
+  slides.forEach((s,j)=>{s.hidden=j!==i;s.classList.remove("enter")});
+  const s=slides[i];void s.offsetWidth;s.classList.add("enter");
+  setPhase(s,0);stage.scrollTop=0;
+  [...dots.children].forEach((d,j)=>d.setAttribute("aria-current",j===i?"true":"false"));
+  count.textContent=(i+1)+" / "+slides.length;
+  prog.style.width=((i+1)/slides.length*100)+"%";
+  document.getElementById("prev").disabled=i===0;
+  document.getElementById("next").disabled=i===slides.length-1;
+  if(!fromHash&&location.hash!=="#"+s.id){try{history.replaceState(null,"","#"+s.id)}catch(e){location.hash=s.id}}
+}
+document.getElementById("prev").addEventListener("click",()=>go(cur-1));
+document.getElementById("next").addEventListener("click",()=>go(cur+1));
+document.addEventListener("keydown",e=>{
+  if(e.target.closest&&e.target.closest("input,textarea"))return;
+  if(e.key==="ArrowRight"||e.key==="PageDown"||(e.key===" "&&!e.target.closest("button"))){e.preventDefault();go(cur+1)}
+  else if(e.key==="ArrowLeft"||e.key==="PageUp"){e.preventDefault();go(cur-1)}
+  else if(e.key==="f"||e.key==="F"){const s=slides[cur];if(s.querySelector(".viz")){flip(s);hold=Date.now()+9000}}
+});
+function fromHash(){const id=location.hash.slice(1);const i=slides.findIndex(s=>s.id===id);go(i<0?0:i,true)}
+window.addEventListener("hashchange",fromHash);
+fromHash();
+if(!reduce){timer=setInterval(()=>{if(Date.now()<hold)return;const s=slides[cur];if(s.querySelector(".viz"))flip(s)},4200)}
+})();
+</script>
+
+</body></html>
