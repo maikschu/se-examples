@@ -1,0 +1,406 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>CPC Feature Explainers (Senad Version)</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: a 2x2 wall of solid neon tiles on black; each opens a single-stage player (diagram, one headline, one sentence). */
+:root{
+  /* Confluent-aligned: near-black indigo ground, Confluent purple as the brand accent.
+     Token roles: --pink = problem (coral), --orange = infrastructure (sky), --yellow = solution (lavender). */
+  --bg:#f5f4f4; --ink:#ffffff; --panel:#ffffff; --panel-hover:#f3f1ff; --brand:#5c48f6;
+  --pink:#c8363d; --orange:#0b7fab; --yellow:#5341e6;
+  --text:#1e1d22; --soft:#5f5d67; --dim:#77757f; --line:#dcdae3; --logo:#173361;
+  --display:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d0c18; --ink:#0d0c18; --panel:#17152a; --panel-hover:#1d1a38; --pink:#ff7a7a; --orange:#5cc8f0; --yellow:#a99cff; --text:#f3f2f8; --soft:#c9c7d6; --dim:#8e8c99; --line:#2e2c42; --logo:#ffffff; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d0c18; --ink:#0d0c18; --panel:#17152a; --panel-hover:#1d1a38; --pink:#ff7a7a; --orange:#5cc8f0; --yellow:#a99cff; --text:#f3f2f8; --soft:#c9c7d6; --dim:#8e8c99; --line:#2e2c42; --logo:#ffffff; color-scheme:dark}
+.top-r{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.logo{height:30px;width:auto;max-width:60%;color:var(--logo)}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{width:100%;max-width:1160px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--text);outline-offset:3px}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);margin:0}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,54px);line-height:1.05;margin:0;text-wrap:balance;color:var(--text)}
+.lede{margin:0;max-width:60ch;font-size:19px}
+.head{display:flex;flex-direction:column;gap:12px}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.tile{border:1.5px solid var(--line);border-radius:16px;padding:28px;min-height:270px;text-align:left;
+  display:flex;flex-direction:column;justify-content:space-between;gap:24px;color:var(--text);background:var(--panel);
+  transition:transform .18s ease,border-color .18s ease,background .18s ease}
+.tile:hover,.tile:focus-visible{transform:translateY(-3px);border-color:var(--brand);background:var(--panel-hover)}
+.tile svg{color:var(--yellow)}
+.t-wide{grid-column:1/-1;min-height:200px}
+.t-wide .tile-hook{max-width:60ch}
+.tile-go{background:var(--brand);border-color:var(--brand) !important;color:#fff}
+h1,.fname,.cap h2,.tile-name{letter-spacing:-.02em}
+.tile-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.tile svg{width:132px;height:77px;flex:none}
+.tile-name{font-family:var(--display);font-weight:800;font-size:clamp(22px,3.1vw,36px);line-height:1.08;margin:0;text-wrap:balance}
+.tile-hook{margin:8px 0 0;font-size:18px;font-weight:400;max-width:36ch;color:var(--soft)}
+.tile-go{font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;border:2.5px solid currentColor;border-radius:999px;padding:6px 14px;white-space:nowrap}
+
+/* player */
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px}
+.back{background:none;border:2.5px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:700}
+.back:hover{border-color:var(--text)}
+.fname{font-family:var(--display);font-weight:800;font-size:clamp(20px,3vw,30px);color:var(--acc);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{background:none;border:2.5px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:700;font-size:15px}
+.chip[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--ink)}
+.stage{background:var(--ink);border:2.5px solid var(--line);border-radius:22px;overflow-x:auto;position:relative}
+.stage svg{display:block;width:100%;min-width:640px;max-height:48vh;font-family:var(--body)}
+.tag{align-self:flex-start;font-weight:800;font-size:15px;letter-spacing:.06em;text-transform:uppercase;border-radius:8px;padding:8px 14px;border:2.5px solid transparent}
+.tag-wo{background:var(--pink);color:var(--ink)}
+.tag-wi{background:var(--yellow);color:var(--ink)}
+.tag-vs{border-color:var(--text)}
+.tag-kb{border-color:var(--dim);color:var(--dim)}
+.stage.wo{border-color:var(--pink)}.stage.wi{border-color:var(--yellow)}
+.dots button.wo{border-color:var(--pink)}.dots button.wo[aria-current="true"]{background:var(--pink)}
+.prog{height:5px;background:var(--line)}
+.prog i{display:block;height:100%;width:0;background:var(--acc);animation:prog 10s linear forwards}
+.paused .prog i{animation-play-state:paused}
+.cap{display:flex;flex-direction:column;gap:8px;min-height:7.5em}
+.cap h2{font-family:var(--display);font-weight:600;font-size:clamp(20px,2.8vw,30px);line-height:1.15;margin:0;text-wrap:balance;color:var(--text)}
+.cap p{margin:0;font-size:19px;max-width:66ch}
+.ctl{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.ctl button{background:none;border:2.5px solid var(--acc);border-radius:999px;padding:9px 20px;font-weight:700}
+.ctl button:hover:not(:disabled){background:var(--acc);color:var(--ink)}
+.ctl button:disabled{border-color:var(--line);color:var(--dim);cursor:default}
+.dots{display:flex;gap:8px;align-items:center}
+.dots button{width:14px;height:14px;padding:0;border-radius:50%;border:2.5px solid var(--acc)}
+.dots button[aria-current="true"]{background:var(--acc)}
+.ask{border-top:2.5px solid var(--line);padding-top:20px;display:flex;flex-direction:column;gap:6px}
+.ask q{font-family:var(--display);font-weight:600;font-size:clamp(17px,2.2vw,22px);color:var(--acc);quotes:none;text-wrap:balance}
+
+/* diagram motion */
+.fly{opacity:0;animation:fly linear infinite}
+.pa{animation:phA 8s infinite}.pb{animation:phB 8s infinite}
+.blink{animation:blink 1.4s ease-in-out infinite}
+.pop{transform-box:fill-box;transform-origin:center;animation:pop .5s cubic-bezier(.2,1.4,.4,1) both}
+.popl{transform-box:fill-box;transform-origin:center;animation:popl 4s ease-in-out infinite}
+.grow{transform-box:fill-box;transform-origin:50% 100%;animation:grow 6s ease-in-out infinite}
+.breathe{transform-box:fill-box;transform-origin:50% 100%;animation:breathe 3s ease-in-out infinite alternate}
+.capd{animation:capd 6s ease-in-out infinite}
+.draw{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 3s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes fly{0%{transform:translate(0,0);opacity:0}12%{opacity:1}88%{opacity:1}100%{transform:translate(var(--dx),var(--dy));opacity:0}}
+@keyframes phA{0%,42%{opacity:1}50%,92%{opacity:0}100%{opacity:1}}
+@keyframes phB{0%,42%{opacity:0}50%,92%{opacity:1}100%{opacity:0}}
+@keyframes blink{50%{opacity:.25}}
+@keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes popl{0%,20%{transform:scale(.5);opacity:0}35%,90%{transform:scale(1);opacity:1}100%{transform:scale(.5);opacity:0}}
+@keyframes grow{0%{transform:scaleY(.35)}35%,75%{transform:scaleY(1)}100%{transform:scaleY(.35)}}
+@keyframes breathe{from{transform:scaleY(.9)}to{transform:scaleY(1)}}
+@keyframes capd{0%,32%{opacity:0}40%,75%{opacity:1}85%,100%{opacity:0}}
+@keyframes prog{to{width:100%}}
+@media (prefers-reduced-motion:reduce){
+  .fly,.blink,.pop,.popl,.grow,.breathe,.capd{animation:none}
+  .pa{animation:none;opacity:0}.pb{animation:none;opacity:1}
+  .draw{animation:none;stroke-dashoffset:0}
+  .prog i{animation:none}.tile{transition:none}
+}
+@media (max-width:720px){.tiles{grid-template-columns:1fr}.tile{min-height:220px}}
+</style>
+
+<div class="wrap">
+  <div class="top"><svg class="logo" viewBox="0 0 212 41" role="img" aria-label="Confluent" fill="currentColor"><path d="M62.065 22.19H64c-.755 3.472-3.705 5.81-7.646 5.81C51.728 28 48 24.55 48 19.989 48 15.427 51.728 12 56.354 12c3.94 0 6.89 2.315 7.646 5.787h-1.935c-.661-2.519-2.785-4.107-5.71-4.107-3.635 0-6.467 2.7-6.467 6.309s2.832 6.332 6.466 6.332c2.926 0 5.05-1.635 5.71-4.131M84 20c0 4.455-3.57 8-8 8s-8-3.545-8-8 3.57-8 8-8 8 3.545 8 8m-1.808 0c0-3.5-2.711-6.318-6.192-6.318-3.48 0-6.192 2.818-6.192 6.318S72.52 26.318 76 26.318 82.192 23.5 82.192 20M103 12v16h-1.48l-9.75-12.612V28H90V12h1.435l9.794 12.777V12zm8.86 1.718V19.6h8.15v1.717h-8.15V28H110V12h11v1.718zM138 26.282V28h-11V12h1.914v14.282zm17-5.288c0 4.185-2.79 7.006-7 7.006s-7-2.82-7-7.006V12h1.9v8.994c0 3.075 2.02 5.295 5.1 5.295 3.055 0 5.1-2.22 5.1-5.295V12h1.9zm8.826-7.276V19.2h8.25v1.718h-8.25v5.365H173V28h-11V12h11v1.718zM191 12v16h-1.48l-9.75-12.612V28H178V12h1.435l9.794 12.777V12zm19 1.718h-5.626V28h-1.77V13.718H197V12h13zM26.375 20.975c.875-.047 1.75-.075 2.625-.139v-.672c-.875-.064-1.75-.092-2.625-.14l-2.625-.081c-1.54-.047-3.08-.06-4.622-.07a188 188 0 0 0-.051-4.623l-.074-2.625c-.045-.875-.07-1.75-.132-2.625h-.742c-.062.875-.087 1.75-.132 2.625l-.073 2.625c-.02.723-.029 1.447-.036 2.17-.285-.665-.57-1.33-.865-1.991l-1.072-2.397c-.377-.79-.735-1.59-1.127-2.375l-.684.285c.277.831.589 1.65.882 2.475l.937 2.454c.258.675.526 1.346.796 2.018a130 130 0 0 0-1.56-1.509l-1.908-1.804c-.65-.587-1.287-1.188-1.95-1.763l-.523.524c.574.663 1.175 1.3 1.762 1.95l1.804 1.908q.749.786 1.509 1.56c-.672-.27-1.343-.538-2.019-.796l-2.453-.937c-.825-.293-1.644-.605-2.476-.883l-.284.685c.785.392 1.584.75 2.375 1.127l2.397 1.072c.66.295 1.325.58 1.99.864-.723.008-1.446.017-2.17.036l-2.624.074c-.875.045-1.75.07-2.625.132v.742c.875.062 1.75.087 2.625.132l2.625.073c1.542.042 3.083.049 4.624.052.01 1.54.022 3.081.069 4.622l.082 2.625c.047.875.075 1.75.139 2.625h.672c.064-.875.092-1.75.14-2.625l.081-2.625c.023-.741.035-1.482.046-2.223q.436 1.022.892 2.037l1.08 2.393c.378.79.738 1.588 1.133 2.373l.62-.259c-.275-.832-.583-1.651-.875-2.478l-.93-2.455q-.395-1.04-.808-2.072.794.777 1.604 1.54l1.913 1.799c.652.585 1.29 1.184 1.955 1.758l.476-.476c-.574-.664-1.173-1.303-1.758-1.955l-1.799-1.914a132 132 0 0 0-1.539-1.603q1.031.413 2.07.809l2.457.929c.826.292 1.645.6 2.478.876l.258-.622c-.785-.393-1.582-.755-2.373-1.133l-2.393-1.08c-.676-.304-1.356-.598-2.036-.892.74-.01 1.481-.022 2.222-.045z"/><path d="M19 37C9.626 37 2 29.374 2 20S9.626 3 19 3s17 7.626 17 17-7.626 17-17 17m0-32.41C10.503 4.59 3.59 11.502 3.59 20S10.503 35.41 19 35.41 34.41 28.497 34.41 20 27.497 4.59 19 4.59"/></svg><div class="top-r"><button class="back" id="dl" type="button" hidden>Download MP4</button><button class="back" id="theme" type="button">Dark theme</button></div></div>
+  <section id="home" class="wrap">
+    <div class="head">
+      <p class="eyebrow">Confluent Private Cloud</p>
+      <h1>Four reasons to look again at your Kafka</h1>
+      <p class="lede">Start with Motivation, the business case in plain language. Then pick a feature tile for the technical animation you can talk over with an architect.</p>
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section id="play" class="wrap" hidden>
+    <div class="bar">
+      <button class="back" id="back" type="button">&larr; All features</button>
+      <p class="fname" id="fname"></p>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="tag" id="tag"></div>
+    <div class="stage" id="stage"></div>
+    <div class="cap" aria-live="polite"><h2 id="ch"></h2><p id="cp"></p></div>
+    <div class="ctl">
+      <button id="prev" type="button">&larr; Back</button>
+      <div class="dots" id="dots"></div>
+      <button id="next" type="button">Next &rarr;</button>
+      <button id="pp" type="button">Pause</button>
+    </div>
+    <div class="ask"><p class="eyebrow">Ask your customer</p><q id="ask"></q></div>
+  </section>
+</div>
+
+<script>
+const P='var(--pink)',O='var(--orange)',Y='var(--yellow)',T='var(--text)',D='var(--dim)',K='var(--ink)';
+const t=(x,y,s,c=T,z=16,a='middle',w=700,ex='')=>`<text x="${x}" y="${y}" fill="${c}" font-size="${z}" text-anchor="${a}" font-weight="${w}" ${ex}>${s}</text>`;
+const box=(x,y,w,h,c,label,sub,dash,z=16)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12" fill="${K}" stroke="${c}" stroke-width="2.5" ${dash?'stroke-dasharray="7 6"':''}/>`
+  +(label?t(x+w/2,y+h/2+(sub?-3:6),label,c,z):'')+(sub?t(x+w/2,y+h/2+17,sub,D,13,'middle',600):'');
+const ln=(x1,y1,x2,y2,c=D,dash)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="2" ${dash?'stroke-dasharray="6 6"':''}/>`;
+const mv=(x1,y1,x2,y2,dur,delay)=>`style="--dx:${x2-x1}px;--dy:${y2-y1}px;animation-duration:${dur}s;animation-delay:${delay}s"`;
+const fly=(x1,y1,x2,y2,c=Y,dur=2.4,delay=0,r=7)=>`<circle class="fly" cx="${x1}" cy="${y1}" r="${r}" fill="${c}" ${mv(x1,y1,x2,y2,dur,delay)}/>`;
+const flyT=(x1,y1,x2,y2,s,c,dur,delay)=>`<text class="fly" x="${x1}" y="${y1+6}" fill="${c}" font-size="20" font-weight="800" text-anchor="middle" ${mv(x1,y1,x2,y2,dur,delay)}>${s}</text>`;
+const g=(cls,inner)=>`<g class="${cls}">${inner}</g>`;
+const key=(x,y,c)=>`<g transform="translate(${x},${y})" fill="none" stroke="${c}" stroke-width="3.5" stroke-linecap="round"><circle r="7"/><path d="M7 0h20M20 0v8M27 0v6"/></g>`;
+const lock=(x,y,c)=>`<g transform="translate(${x},${y})"><rect x="-9" y="-2" width="18" height="14" rx="3" fill="${c}"/><path d="M-5 -2v-5a5 5 0 0 1 10 0v5" fill="none" stroke="${c}" stroke-width="3"/></g>`;
+const gauge=(x,y,w,f,c)=>`<rect x="${x}" y="${y}" width="${w}" height="9" rx="4.5" fill="${K}" stroke="${D}" stroke-width="1.5"/><rect x="${x}" y="${y}" width="${w*f}" height="9" rx="4.5" fill="${c}"/>`;
+const card=(x,y,w,rows)=>`<rect x="${x}" y="${y}" width="${w}" height="${rows.length*26+20}" rx="10" fill="${K}" stroke="${D}" stroke-width="2"/>`
+  +rows.map((r,i)=>t(x+14,y+31+i*26,r[0],r[1]||T,15,'start',600,'font-family="var(--mono)"')).join('');
+const SCR='card: x9$Kq#72%Lm', CLR='card: 4111 1111 1111 1111';
+
+/* ---------- Gateway ---------- */
+const AY=[93,200,307], AN=['Orders app','Payments app','Mobile app'];
+const apps=(c=T)=>AY.map((y,i)=>box(40,y-23,130,46,c,AN[i],'',0,15)).join('');
+const under=(s,c,cls='')=>AY.map(y=>`<g class="${cls}">${t(105,y+41,s,c,13)}</g>`).join('');
+const toGw=()=>AY.map((y,i)=>ln(170,y,330,200)+fly(170,y,330,200,Y,2.4,i*.8)).join('');
+const GW=box(330,110,140,180,Y,'Gateway');
+const flip=(a,b)=>g('pa',ln(470,200,620,105,O)+fly(470,200,620,105,O,1.6,0)+fly(470,200,620,105,O,1.6,.8)+t(400,325,a,O,14))
+  +g('pb',ln(470,200,620,295,Y)+fly(470,200,620,295,Y,1.6,0)+fly(470,200,620,295,Y,1.6,.8)+t(400,325,b,Y,14));
+const A4=[60,150,240,330], C3=[80,195,310];
+const apps4=()=>A4.map((y,i)=>box(40,y-20,130,40,T,'App '+(i+1),'',0,15)).join('');
+const cl3=()=>C3.map((y,i)=>box(620,y-40,150,80,O,'Cluster '+'ABC'[i])).join('');
+
+const gateway=[
+ {name:'Move clusters',steps:[
+  {h:'Today, apps are wired straight to a cluster',p:'Upgrade, move or replace that cluster and every team has to change and redeploy their app. Migrations drag on for months.',
+   svg:()=>AY.map((y,i)=>ln(170,y,620,105)+fly(170,y,620,105,Y,2.6,i*.8)).join('')+apps()+box(620,60,150,90,O,'Old cluster')+box(620,250,150,90,Y,'New cluster','waiting',1)+under('change + redeploy',P,'blink')},
+  {h:'With Gateway, you switch once in the middle',p:'Apps talk to the Gateway. You repoint the Gateway to the new cluster and the apps carry on, untouched.',
+   svg:()=>toGw()+flip('Sending to old cluster','Switched to new cluster')+apps()+GW+box(620,60,150,90,O,'Old cluster')+box(620,250,150,90,Y,'New cluster')+under('no change',Y)}]},
+ {name:'Survive an outage',steps:[
+  {h:'A site goes down and every app is stuck',p:'The standby site is ready, but each app still points at the failed one. Recovery means chasing every team in the middle of the night.',
+   svg:()=>AY.map(y=>ln(170,y,620,105,P,1)).join('')+apps()+box(620,60,150,90,P,'Primary site','down')+box(620,250,150,90,O,'Standby site','idle')+under('connection lost',P,'blink')},
+  {h:'Gateway sends traffic to the standby',p:'Apps keep the same address. The Gateway redirects them to the healthy site, so failover is one action instead of hundreds.',
+   svg:()=>toGw()+ln(695,150,695,250,D,1)+fly(695,150,695,250,O,2,0,5)+t(683,205,'kept in sync',D,13,'end')+flip('Primary site healthy','Failed over to standby')+apps()+GW+box(620,60,150,90,O,'Primary site')+box(620,250,150,90,Y,'Standby site')
+     +g('pb',`<path d="M650 75l90 60M740 75l-90 60" stroke="${P}" stroke-width="5" stroke-linecap="round"/>`)+under('same address',Y)}]},
+ {name:'One front door',steps:[
+  {h:'Many clusters, many addresses',p:'Every app has to know which cluster it uses and where it lives. Each new cluster adds more wiring to manage and secure.',
+   svg:()=>A4.map(a=>C3.map(c=>ln(170,a,620,c,P)).join('')).join('')+apps4()+cl3()},
+  {h:'One address that every team remembers',p:'Apps connect to a single name. The Gateway routes each one to the right cluster behind it, and the clusters stay hidden from the network.',
+   svg:()=>A4.map((y,i)=>ln(170,y,330,200)+fly(170,y,330,200,Y,2.4,i*.6)).join('')+C3.map((y,i)=>ln(470,200,620,y,O)+fly(470,200,620,y,O,1.8,i*.6)).join('')+apps4()+GW+cl3()
+     +`<rect x="300" y="52" width="200" height="34" rx="17" fill="${Y}"/>`+t(400,75,'kafka.example.com',K,15)}]},
+ {name:'Safer sign-in',steps:[
+  {h:'Cluster secrets end up in every app',p:'Each team stores the cluster’s credentials in its own code and config. Rotating them means touching every app again.',
+   svg:()=>AY.map((y,i)=>ln(170,y,620,200)+fly(170,y,620,200,P,2.6,i*.8)+key(186,y-22,P)).join('')+apps()+box(620,150,150,100,O,'Kafka cluster')+t(400,372,'The same secret, copied into every app',P,15)},
+  {h:'Apps sign in the way they already do',p:'Apps use their existing company identity. The Gateway swaps it for the cluster’s credentials, which stay in one place.',
+   svg:()=>toGw()+ln(470,200,620,200,O)+fly(470,200,620,200,O,1.6,0)+fly(470,200,620,200,O,1.6,.8)+apps()+GW+key(388,238,O)+box(620,150,150,100,O,'Kafka cluster')
+     +t(250,352,'company sign-in',Y,14)+t(545,352,'cluster credential',O,14)}]}
+];
+
+/* ---------- Multi-Tenancy ---------- */
+const TN=['Payments','Fraud','Trading','Mobile','Risk','Loans','Cards','Analytics'], TU=[.18,.12,.31,.22,.09,.15,.27,.2];
+const mt=[{name:'',steps:[
+ {h:'Every team wants its own Kafka',p:'So every team gets its own cluster. Most of that hardware sits idle, and each cluster still needs patching, monitoring and upgrades.',
+  svg:()=>TN.map((n,i)=>{const x=40+185*(i%4),y=30+155*(i>>2);return box(x,y,160,130,O)+t(x+80,y+30,n,T,15)
+    +[0,1,2].map(k=>`<rect x="${x+38+k*30}" y="${y+44}" width="24" height="24" rx="5" fill="none" stroke="${D}" stroke-width="2"/>`).join('')
+    +gauge(x+20,y+86,120,TU[i],P)+t(x+80,y+116,Math.round(TU[i]*100)+'% used',D,12,'middle',600)}).join('')+t(400,368,'8 clusters. 24 servers. Mostly idle.',P,18)},
+ {h:'One shared cluster, a private space for each team',p:'Each team gets its own logical cluster (LKC) inside one physical cluster (PKC), with its own address, topics and access rules. To the team it looks and feels like a dedicated cluster.',
+  svg:()=>box(50,30,700,310,Y)+t(400,62,'One physical cluster (PKC)',Y,16)+TN.map((n,i)=>{const x=93+158*(i%4),y=85+120*(i>>2);
+    return `<g class="pop" style="animation-delay:${i*.18}s">${box(x,y,140,95,O,n,'LKC',0,15)}${lock(x+120,y+18,Y)}</g>`}).join('')+t(400,376,'Each team sees only its own space',T,15)},
+ {h:'Each app connects to its own address',p:'Every logical cluster has its own Kafka address. Apps use standard Kafka clients and simply point at their team’s address. One team cannot reach another team’s data.',
+  svg:()=>box(520,25,250,350,Y)+t(645,49,'Physical cluster (PKC)',Y,14)
+    +[['Payments',105],['Fraud',207],['Trading',309]].map(([n,y],i)=>ln(160,y,545,y,O)+fly(160,y,545,y,O,2.2,i*.6)+fly(160,y,545,y,O,2.2,i*.6+1.1)
+      +box(30,y-25,130,50,T,n+' app','',0,15)+box(545,y-32,200,64,O,n+' LKC','',0,15)+lock(725,y-16,Y)
+      +t(352,y-13,`lkc-${['pay01','frd02','trd03'][i]}.kafka.example.com`,Y,12.5,'middle',600,'font-family="var(--mono)"')).join('')},
+ {h:'A noisy neighbour cannot spoil it for the rest',p:'Every tenant has a quota. When one team spikes, it is held at its limit and the other teams do not feel it.',
+  svg:()=>box(60,30,680,320,Y)+t(400,56,'One physical cluster',Y,15)+ln(100,130,700,130,Y,1)+t(696,122,'quota',Y,13,'end')
+    +[['Fraud',100],['Cards',130],['Trading',180],['Loans',80],['Risk',110]].map(([n,h],i)=>{const x=120+120*i,hot=i===2;
+      return `<rect class="${hot?'grow':'breathe'}" x="${x}" y="${310-h}" width="80" height="${h}" rx="6" fill="${hot?P:O}"/>`+t(x+40,336,n,hot?P:T,14)}).join('')
+    +g('capd',`<rect x="360" y="78" width="80" height="52" rx="6" fill="none" stroke="${P}" stroke-width="2" stroke-dasharray="6 5"/>`+t(452,108,'held at quota',P,13,'start'))},
+ {h:'A new team asks for Kafka and gets it in minutes',p:'No new servers and no new cluster to build. The platform team places a new tenant in the shared cluster, and it comes with its own address for the team’s apps.',
+  svg:()=>ln(230,200,330,200)+box(330,30,440,250,Y)+t(550,58,'Physical cluster (PKC)',Y,15)
+    +['Payments','Fraud','Trading','Mobile','Risk'].map((n,i)=>box(350+140*(i%3),80+85*Math.floor(i/3),120,65,O,n,'LKC',0,15)).join('')
+    +g('pa',box(630,165,120,65,D,'free space','',1,14)+fly(230,200,330,200,Y,1.6,0)+fly(230,200,330,200,Y,1.6,.8)+t(550,325,'placing the new tenant…',O,15))
+    +g('pb',box(630,165,120,65,Y,'Lending','new LKC',0,15)+`<rect x="390" y="298" width="320" height="38" rx="19" fill="${Y}"/>`+t(550,323,'lkc-len06.kafka.example.com',K,14,'middle',700,'font-family="var(--mono)"')+t(550,362,'New address, ready in minutes',Y,14))
+    +box(30,160,200,80,T,'New request','Kafka for the Lending team',0,16)},
+ {h:'Less hardware to buy and run',p:'Consolidate many half-empty clusters into one well-used cluster. That means fewer servers to license, patch and monitor.',
+  svg:()=>t(210,50,'Without CPC',P,16)+Array.from({length:24},(_,i)=>`<rect x="${48+42*(i%8)}" y="${80+42*Math.floor(i/8)}" width="30" height="30" rx="6" fill="none" stroke="${P}" stroke-width="2.5"/>`).join('')
+    +t(210,232,'8 clusters, 24 servers',P,15)+t(425,150,'→',T,40)+t(610,50,'With CPC',Y,16)+box(480,70,260,130,Y)
+    +Array.from({length:6},(_,i)=>`<rect x="${495+40*i}" y="95" width="30" height="30" rx="6" fill="${Y}"/>`).join('')+t(610,165,'8 tenants inside',O,14)+t(610,232,'1 cluster, 6 servers',Y,15)
+    +t(400,380,'Illustrative sizing',D,13,'middle',600)}
+]}];
+
+/* ---------- Intelligent Replication ---------- */
+const irBase=(gl,gf,gc)=>ln(170,80,320,80)+ln(360,120,220,260)+ln(440,120,580,260)+box(40,57,130,46,T,'App','',0,15)
+  +box(320,40,160,80,Y,'Leader','partition')+box(120,260,160,80,O,gl?'':'Follower 1')+box(520,260,160,80,O,gl?'':'Follower 2')
+  +(gl?t(200,296,'Follower 1',O)+t(600,296,'Follower 2',O)+gauge(140,312,120,gf,gc)+gauge(540,312,120,gf,gc)+t(200,362,gl,gc,13)+t(600,362,gl,gc,13):'');
+const push=()=>fly(170,80,320,80,Y,2.4,0)+fly(360,120,220,260,Y,2.4,1.2)+fly(440,120,580,260,Y,2.4,1.2);
+const ir=[{name:'',steps:[
+ {h:'Kafka keeps copies of every message',p:'Each partition has a leader and followers on other brokers. Every message is copied from the leader to the followers, so if a broker fails, a follower takes over and nothing is lost. That copying is replication.',
+  svg:()=>ln(125,76,125,120)+g('pa',fly(125,76,125,120,Y,1.4,0))+box(60,30,130,46,T,'App','',0,15)
+    +[60,300,540].map((x,b)=>box(x,120,200,170,b?O:Y)+t(x+100,152,'Broker '+(b+1),b?O:Y,17)
+      +(b===0?g('pa',t(x+100,178,'Leader',Y,14)):b===1?g('pa',t(x+100,178,'Follower',D,14))+g('pb',t(x+100,178,'New leader',Y,14)):t(x+100,178,'Follower',D,14))
+      +[0,1,2,3].map(k=>`<rect class="pop" style="animation-delay:${k*.6+(b?.35:0)}s" x="${x+28+k*38}" y="215" width="30" height="30" rx="6" fill="${b?O:Y}"/>`).join('')
+      +t(x+100,272,b?'copy of the messages':'messages',D,12.5,'middle',600)).join('')
+    +g('pb',`<path d="M90 140l140 130M230 140l-140 130" stroke="${P}" stroke-width="6" stroke-linecap="round"/>`+t(160,318,'broker fails',P,14)+t(400,362,'A copy takes over. Nothing is lost.',Y,16))
+    +g('pa',t(400,362,'Every message is copied to other brokers',T,16))},
+ {h:'Open-source Kafka and CP: followers pull',p:'Each follower keeps asking the leader “anything new?” and fetches whatever is there. Across thousands of partitions, that constant asking eats a large share of every broker’s CPU.',
+  svg:()=>irBase('CPU busy asking',.86,P)+[0,.25,.5,.75].map(d=>flyT(220,260,360,120,'?',P,1,d)+flyT(580,260,440,120,'?',P,1,d+.12)).join('')+fly(170,80,320,80,Y,2.4,0)+t(400,205,'PULL',P,18)+t(400,228,'“anything new?”',P,14)},
+ {h:'Intelligent Replication: the leader pushes',p:'This is push-based replication. The leader partition pushes new data to its follower partitions the moment it arrives, so followers no longer spend CPU asking.',
+  svg:()=>irBase('CPU freed for real work',.3,Y)+push()+t(400,205,'PUSH',Y,18)+t(400,228,'leader to follower',Y,14)},
+ {h:'Why “intelligent”: it picks push or pull for each follower',p:'A follower that is in sync gets data pushed. If one falls behind, say after a restart, it pulls to catch up and then goes back to push. The switch is automatic. Nobody has to step in.',
+  svg:()=>ln(170,80,320,80)+ln(360,120,230,250)+ln(440,120,570,250)+box(40,57,130,46,T,'App','',0,15)+box(320,40,160,80,Y,'Leader','partition')
+    +box(90,250,200,90,O)+t(190,287,'Follower 1',O)+t(190,314,'in sync',Y,13)+t(270,180,'PUSH',Y,16,'end')
+    +fly(170,80,320,80,Y,2.4,0)+fly(360,120,230,250,Y,1.8,0)+fly(360,120,230,250,Y,1.8,.9)
+    +box(510,250,200,90,O)+t(610,287,'Follower 2',O)
+    +g('pa',t(610,314,'in sync',Y,13)+t(530,180,'PUSH',Y,16,'start')+fly(440,120,570,250,Y,1.8,0)+fly(440,120,570,250,Y,1.8,.9))
+    +g('pb',t(610,314,'fell behind, catching up',P,13)+t(530,180,'PULL',O,16,'start')+flyT(570,250,440,120,'?',O,1.2,0)+flyT(570,250,440,120,'?',O,1.2,.6)+fly(440,120,570,250,O,1.2,.3,9))
+    +t(400,378,'Switches automatically, follower by follower',T,15)},
+ {h:'Fewer brokers for the same workload',p:'With pull, the CPU spent on fetch requests grows with every partition you add. Push gives that CPU back, so each broker carries more work and you need fewer of them than with CP or open-source Kafka.',
+  svg:()=>t(400,38,'Without CPC: CP or open-source Kafka (pull)',P,16)+Array.from({length:6},(_,i)=>{const x=55+120*i;return box(x,52,90,70,P)+t(x+45,82,'Broker',T,14)+gauge(x+12,98,66,.9,P)}).join('')
+    +t(400,212,'With CPC: Intelligent Replication (push)',Y,16)+Array.from({length:6},(_,i)=>{const x=55+120*i;return i<3?box(x,226,90,70,Y)+t(x+45,256,'Broker',T,14)+gauge(x+12,272,66,.7,Y)
+      :`<g class="blink">${box(x,226,90,70,D,'freed','',1,14)}</g>`}).join('')+t(400,345,'Same workload on both rows',T,15)+t(400,374,'Illustrative sizing. Results depend on the workload.',D,13,'middle',600)},
+ {h:'Steadier tail latency under load',p:'Tail latency is the slowest 1% of requests, the ones your users notice. With pull, a write waits for followers to come and fetch it, and that wait balloons as load grows. With push, data is replicated as it arrives, so latency stays steady.',
+  svg:()=>ln(90,330,740,330,D)+ln(90,330,90,50,D)+t(415,360,'Load on the cluster',D,14,'middle',600)+t(52,190,'Slowest 1% of requests (p99)',D,14,'middle',600,'transform="rotate(-90 52 190)"')
+    +`<path class="draw" pathLength="1" d="M90 292C350 282 520 252 600 165S700 72 730 60" fill="none" stroke="${P}" stroke-width="4" stroke-linecap="round"/>`
+    +`<path class="draw" pathLength="1" d="M90 302C300 298 550 290 730 274" fill="none" stroke="${Y}" stroke-width="4" stroke-linecap="round"/>`
+    +t(572,128,'Without CPC (CP or open-source Kafka)',P,15,'end')+t(726,254,'With CPC (Intelligent Replication)',Y,15,'end')+t(415,388,'Illustrative shape, not benchmark data',D,13,'middle',600)}
+]}];
+
+/* ---------- CSFLE ---------- */
+const csPath=(c1=T,c2=T)=>ln(160,200,335,200)+ln(465,200,640,200)+box(30,170,130,60,c1,'Payments app','',0,15)+box(335,150,130,100,O,'Kafka')+box(640,170,130,60,c2,'Billing app','',0,15);
+const watchers=(c,s)=>[190,340,490].map((x,i)=>ln(x+60,310,400,250,c)+box(x,310,120,50,T,['Admins','Logs','Tools'][i],'',0,15)+t(x+60,384,s,c,13)).join('');
+const cs=[{name:'',steps:[
+ {h:'Sensitive data passes through many hands',p:'A card number travels through brokers, admin screens, logs and tools. Network and disk encryption do not hide it from people who have access to the cluster.',
+  svg:()=>watchers(P,'can read it')+ln(400,118,400,150)+csPath()+fly(160,200,335,200,P,2,0)+fly(465,200,640,200,P,2,1)+card(270,20,260,[['name: Sam Lee'],[CLR,P],['amount: 42.00']])},
+ {h:'Lock the sensitive field before it leaves the app',p:'Only the fields you choose, such as a card number or national ID, are encrypted inside the app. The rest of the message stays readable.',
+  svg:()=>ln(95,122,95,170)+csPath(Y,D)+fly(160,200,335,200,Y,2,0)+card(30,24,270,[['name: Sam Lee'],[''],['amount: 42.00']])
+    +g('pa',t(44,81,CLR,P,15,'start',600,'font-family="var(--mono)"'))+g('pb',t(44,81,SCR,Y,15,'start',600,'font-family="var(--mono)"')+lock(232,74,Y))+t(95,254,'encrypts here',Y,13)},
+ {h:'Kafka only ever sees scrambled data',p:'Brokers, admins and tools can still move and manage the message. The protected field is unreadable to all of them.',
+  svg:()=>watchers(Y,'sees scramble')+ln(400,118,400,150)+csPath()+fly(160,200,335,200,Y,2,0)+fly(465,200,640,200,Y,2,1)+card(270,20,260,[['name: Sam Lee'],[SCR,Y],['amount: 42.00']])+lock(458,74,Y)},
+ {h:'Only approved apps can unlock it',p:'The keys stay in your own key vault. You decide which apps may use them, and taking a key away cuts off access.',
+  svg:()=>ln(170,200,300,148)+ln(170,200,300,298)+ln(375,76,375,120,O)+box(40,160,130,80,O,'Kafka')+box(300,20,150,56,O,'Your key vault','',0,15)+box(300,120,150,56,Y,'Approved app','',0,15)+box(300,270,150,56,P,'Other app','',0,15)
+    +fly(170,200,300,148,Y,2,0)+fly(170,200,300,298,Y,2,.6)+fly(375,76,375,120,O,1.6,0,6)+t(390,104,'key',O,13,'start')
+    +card(490,125,270,[[CLR,Y]])+t(625,195,'reads the real value',Y,13)+card(490,275,270,[[SCR,P]])+lock(736,292,P)+t(625,345,'no key, no data',P,13)}
+]}];
+
+
+/* ---------- Motivation (business-first layer) ---------- */
+const APPS3=()=>AY.map((y,i)=>box(40,y-23,130,46,T,['Trading','Pricing','Risk'][i],'',0,15)).join('');
+const X=(x,y,w,h)=>`<path d="M${x} ${y}l${w} ${h}M${x+w} ${y}l${-w} ${h}" stroke="${P}" stroke-width="5" stroke-linecap="round"/>`;
+const mo=[
+ {name:'Disaster recovery',steps:[
+  {h:'A cloud or data center outage stops the business',p:'When a region or data center is lost, every system that depends on Kafka waits with it.',
+   svg:()=>ln(170,200,560,200,P,1)+fly(170,200,420,200,P,2.4,0)+box(40,150,130,100,T,'Your business')+box(560,140,200,120,P,'Cloud region','down')+g('pb',X(600,160,120,80))+t(400,340,'Orders, payments, bookings: all waiting',P,17)},
+  {h:'A second site takes over',p:'Traffic moves to a standby site and the service carries on. Under the hood: Gateway and Intelligent Replication.',
+   svg:()=>ln(170,200,560,105,P,1)+ln(170,200,560,295,Y)+fly(170,200,560,295,Y,2.2,0)+fly(170,200,560,295,Y,2.2,1.1)+box(40,150,130,100,T,'Your business')+box(560,60,200,90,P,'Primary site','down',1)+box(560,250,200,90,Y,'Standby site','takes over')+t(400,372,'The service carries on',Y,17)}]},
+ {name:'Stay in control',steps:[
+  {h:'One cloud provider is a single point of failure',p:'An outage, a policy change or a political decision can cut access to the only place your data lives.',
+   svg:()=>ln(170,200,520,200)+fly(170,200,520,200,Y,2.4,0)+box(40,150,130,100,T,'Your apps')+box(520,110,240,180,O,'One cloud provider')+g('blink',t(400,350,'Outage? Policy change? Access cut?',P,17))},
+  {h:'Keep an on-prem option next to the cloud',p:'Run Kafka on your own infrastructure, in sync with the cloud, so you decide where data lives. Under the hood: CPC.',
+   svg:()=>ln(170,200,620,105)+ln(170,200,620,295)+fly(170,200,620,105,O,2.2,0)+fly(170,200,620,295,Y,2.2,.8)+ln(695,150,695,250,D,1)+fly(695,150,695,250,O,2,0,5)+t(683,205,'kept in sync',D,13,'end')+box(40,150,130,100,T,'Your apps')+box(620,60,150,90,O,'Cloud')+box(620,250,150,90,Y,'Your data center')+t(400,372,'You choose where Kafka runs',Y,17)}]},
+ {name:'Sign-in continuity',steps:[
+  {h:'If the identity provider is down, Kafka is out of reach',p:'When a sign-in service such as Microsoft Entra has an outage, apps cannot authenticate and data stops flowing.',
+   svg:()=>ln(170,200,620,200,P,1)+box(40,160,130,80,T,'Your apps')+box(620,160,150,80,O,'Kafka')+box(300,30,200,70,P,'Identity provider','outage',1)+g('pb',X(330,40,140,50))+lock(395,200,P)+t(400,330,'No sign-in, no data',P,17)},
+  {h:'Apps keep working through a sign-in outage',p:'The Gateway holds the cluster’s credentials and swaps them in for the app, so access carries on. Under the hood: Gateway AuthSwap.',
+   svg:()=>ln(170,200,330,200)+fly(170,200,330,200,Y,2,0)+ln(470,200,620,200,O)+fly(470,200,620,200,O,1.6,.4)+box(40,160,130,80,T,'Your apps')+GW+key(388,238,O)+box(620,160,150,80,O,'Kafka')+box(300,20,200,56,P,'Identity provider','down',1)+t(400,350,'Access to Kafka continues',Y,17)}]},
+ {name:'Separate business units',steps:[
+  {h:'Every unit wants its own Kafka',p:'Separate clusters mean separate hardware, bills and upkeep, even when most of it sits idle.',
+   svg:()=>['Business unit A','Business unit B','Partner bank'].map((n,i)=>box(60+240*i,110,200,110,O,n,'own cluster',0,16)).join('')+t(400,300,'3 clusters, 3 bills, 3 times the upkeep',P,17)},
+  {h:'One platform, a private space for each',p:'Each business unit, or an outside customer such as a bank served by a telco, gets an isolated Kafka. Under the hood: Multi-Tenancy.',
+   svg:()=>box(40,40,720,270,Y)+t(400,74,'One shared Kafka platform',Y,16)+['Business unit A','Business unit B','Partner bank'].map((n,i)=>`<g class="pop" style="animation-delay:${i*.15}s">${box(70+230*i,100,200,170,O,n,'private space',0,16)}${lock(170+230*i,130,Y)}</g>`).join('')+t(400,350,'Isolated per unit, or offered to a partner as a service',Y,17)}]},
+ {name:'Always-on trading',steps:[
+  {h:'Trading cannot stop for maintenance',p:'Moving or upgrading Kafka should not mean a pause in a market that runs around the clock.',
+   svg:()=>ln(170,200,620,200)+fly(170,200,300,200,Y,2,0)+box(40,160,130,80,T,'Trading apps')+box(620,150,150,100,O,'Kafka cluster')+g('blink',box(300,168,200,64,P,'Switch = pause'))+t(400,330,'Every change means a trading halt',P,17)},
+  {h:'Switch behind the scenes with no pause',p:'Traffic moves to the new cluster while apps keep sending. Under the hood: Gateway.',
+   svg:()=>toGw()+flip('Sending to current cluster','Switched to new cluster')+APPS3()+GW+box(620,60,150,90,O,'Old cluster')+box(620,250,150,90,Y,'New cluster')+under('no pause',Y)}]},
+ {name:'Cloud and on-prem in sync',steps:[
+  {h:'On-prem systems and the cloud drift apart',p:'Store cash systems or ship bookings update locally, while the cloud only catches up later.',
+   svg:()=>ln(240,200,560,200,P,1)+box(40,140,200,120,O,'Stores and ships','on-prem')+box(560,140,200,120,O,'Cloud')+g('blink',t(400,190,'?',P,30))+t(400,320,'Copied by hand, hours or days late',P,17)},
+  {h:'Both sides stay current',p:'Data flows continuously between on-prem and the cloud. Under the hood: replication between CPC and the cloud.',
+   svg:()=>ln(240,185,560,185)+ln(240,215,560,215)+fly(240,185,560,185,Y,2,0)+fly(240,185,560,185,Y,2,1)+fly(560,215,240,215,O,2,.5)+fly(560,215,240,215,O,2,1.5)+box(40,140,200,120,O,'Stores and ships','on-prem')+box(560,140,200,120,Y,'Cloud')+t(400,320,'Cash systems and bookings stay current',Y,17)}]}
+];
+
+const ico={
+ motivation:`<svg viewBox="0 0 120 70" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" aria-hidden="true"><circle cx="60" cy="37" r="30"/><circle cx="60" cy="37" r="18"/><circle cx="60" cy="37" r="6" fill="currentColor"/><path d="M60 37L100 5M100 5v14M100 5H86"/></svg>`,
+ gateway:`<svg viewBox="0 0 120 70" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" aria-hidden="true"><path d="M14 15L48 35M14 35h34M14 55L48 35M72 35L96 17M72 35L96 53"/><rect x="48" y="19" width="24" height="32" rx="5" fill="currentColor"/><circle cx="12" cy="15" r="5" fill="currentColor"/><circle cx="12" cy="35" r="5" fill="currentColor"/><circle cx="12" cy="55" r="5" fill="currentColor"/><rect x="96" y="7" width="20" height="20" rx="4"/><rect x="96" y="43" width="20" height="20" rx="4"/></svg>`,
+ 'multi-tenancy':`<svg viewBox="0 0 120 70" fill="none" stroke="currentColor" stroke-width="4" aria-hidden="true"><rect x="4" y="4" width="112" height="62" rx="8"/>${[0,1,2,3,4,5].map(i=>`<rect x="${16+33*(i%3)}" y="${14+24*(i>>1>0&&i>2?1:0)}" width="22" height="16" rx="3" fill="currentColor" stroke="none"/>`).join('')}</svg>`,
+ replication:`<svg viewBox="0 0 120 70" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" aria-hidden="true"><path d="M60 16L22 54M60 16l38 38"/><circle cx="60" cy="14" r="11" fill="currentColor"/><circle cx="22" cy="54" r="10" fill="currentColor"/><circle cx="98" cy="54" r="10" fill="currentColor"/><circle cx="41" cy="35" r="4" fill="currentColor"/><circle cx="79" cy="35" r="4" fill="currentColor"/></svg>`,
+ csfle:`<svg viewBox="0 0 120 70" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" aria-hidden="true"><path d="M6 20h30M6 36h22M6 52h30M92 36h22M84 20h30M84 52h30"/><rect x="42" y="30" width="36" height="30" rx="6" fill="currentColor" stroke="none"/><path d="M50 30v-9a10 10 0 0 1 20 0v9"/></svg>`
+};
+const F={
+ motivation:{name:'Motivation',tile:'t-a t-wide',acc:Y,hook:'Start with the business case: outages, control, separation, always-on. Then go technical.',tracks:mo,cpc:'CPC',tags:mo.map(()=>['wo','wi']),
+   ask:'Which would hurt most today: a cloud outage, a lost sign-in service, or a pause in a system that must never stop?'},
+ gateway:{name:'CPC Gateway',tile:'t-a',acc:Y,hook:'Move, protect and simplify Kafka without touching a single app.',tracks:gateway,cpc:'CPC',tags:[['wo','wi'],['wo','wi'],['wo','wi'],['wo','wi']],
+   ask:'What happens to your application teams when you need to move or upgrade a Kafka cluster?'},
+ 'multi-tenancy':{name:'CPC Multi-Tenancy',tile:'t-a',acc:Y,hook:'One shared cluster. A private Kafka for every team.',tracks:mt,cpc:'CPC',tags:[['wo','wi','wi','wi','wi','vs']],
+   ask:'How many Kafka clusters do you run today, and how busy is the average one?'},
+ replication:{name:'Intelligent Replication',tile:'t-a',acc:Y,hook:'Push-based replication that needs fewer brokers and keeps latency steady.',tracks:ir,cpc:'CPC',tags:[['kb','wo','wi','wi','vs','vs']],
+   ask:'How much of your Kafka hardware is headroom you pay for but cannot use?'},
+ csfle:{name:'CSFLE',tile:'t-a',acc:Y,hook:'Client-side field level encryption. Sensitive fields stay locked, even inside Kafka.',tracks:cs,cpc:'CSFLE',tags:[['wo','wi','wi','wi']],
+   ask:'Who can read a card number today once it lands in a Kafka topic?'}
+};
+
+const $=id=>document.getElementById(id);
+const still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+let cur=null,tr=0,st=0,playing=!still;
+
+$('tiles').innerHTML=Object.entries(F).map(([id,f])=>`<button class="tile ${f.tile}" type="button" data-id="${id}">
+  <span class="tile-top">${ico[id]}<span class="tile-go">Play &#9654;</span></span>
+  <span><span class="tile-name" style="display:block">${f.name}</span><span class="tile-hook" style="display:block">${f.hook}</span></span></button>`).join('');
+$('tiles').addEventListener('click',e=>{const b=e.target.closest('.tile');if(b)location.hash=b.dataset.id});
+
+function route(){
+  const id=location.hash.slice(1);
+  if(F[id]){if(cur!==id){cur=id;tr=0;st=0;playing=!still}render();$('back').focus({preventScroll:true});scrollTo(0,0)}
+  else{cur=null;$('play').hidden=true;$('home').hidden=false}
+}
+function render(){
+  const f=F[cur],track=f.tracks[tr],s=track.steps[st];
+  $('home').hidden=true;$('play').hidden=false;$('play').style.setProperty('--acc',f.acc);
+  $('fname').textContent=f.name;
+  $('chips').hidden=f.tracks.length<2;
+  $('chips').innerHTML=f.tracks.map((k,i)=>`<button class="chip" type="button" data-i="${i}" aria-pressed="${i===tr}">${k.name}</button>`).join('');
+  $('stage').innerHTML=`<svg viewBox="0 0 800 400" role="img" aria-label="${s.h}">${s.svg()}</svg><div class="prog"><i></i></div>`;
+  $('stage').querySelector('.prog i').addEventListener('animationend',()=>{if(playing&&!atEnd())go(1)});
+  const tg=f.tags[tr][st];$('tag').className='tag tag-'+tg;
+  $('tag').textContent={wo:'Without '+f.cpc,wi:'With '+f.cpc,vs:'Without '+f.cpc+' vs with '+f.cpc,kb:'Kafka basics'}[tg];
+  $('stage').classList.add(tg);
+  $('ch').textContent=s.h;$('cp').textContent=s.p;$('ask').textContent=f.ask;
+  $('dots').innerHTML=track.steps.map((_,i)=>`<button type="button" class="${f.tags[tr][i]}" data-i="${i}" aria-label="Step ${i+1}" aria-current="${i===st}"></button>`).join('');
+  $('prev').disabled=tr===0&&st===0;$('next').disabled=atEnd();
+  $('next').innerHTML=(st===track.steps.length-1&&!atEnd())?'Next use case &rarr;':'Next &rarr;';
+  setPlay();
+}
+const atEnd=()=>{const f=F[cur];return tr===f.tracks.length-1&&st===f.tracks[tr].steps.length-1};
+function setPlay(){$('play').classList.toggle('paused',!playing);$('pp').textContent=playing?'Pause':'Play'}
+function go(d){
+  const f=F[cur];st+=d;
+  if(st>=f.tracks[tr].steps.length){if(tr<f.tracks.length-1){tr++;st=0}else st--}
+  if(st<0){if(tr>0){tr--;st=f.tracks[tr].steps.length-1}else st=0}
+  render();
+}
+$('next').onclick=()=>go(1);$('prev').onclick=()=>go(-1);
+$('pp').onclick=()=>{playing=!playing;setPlay()};
+$('back').onclick=()=>{location.hash='home'};
+$('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(b){tr=+b.dataset.i;st=0;render()}});
+$('dots').addEventListener('click',e=>{const b=e.target.closest('button');if(b){st=+b.dataset.i;render()}});
+addEventListener('keydown',e=>{if(!cur)return;
+  if(e.key==='ArrowRight'&&!atEnd())go(1);else if(e.key==='ArrowLeft')go(-1);else if(e.key==='Escape')location.hash='home'});
+const root=document.documentElement;
+const isDark=()=>root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
+const themeLabel=()=>{$('theme').textContent=isDark()?'Light theme':'Dark theme'};
+$('theme').onclick=()=>{root.dataset.theme=isDark()?'light':'dark';themeLabel()};themeLabel();
+(async()=>{
+  const d=await window.claude?.use?.('downloads');if(!d)return;
+  const b=$('dl'),lab=b.textContent;b.hidden=false;
+  b.onclick=async()=>{
+    b.disabled=true;b.textContent='Preparing video\u2026';
+    try{const r=await fetch('cpc-explainers-'+(isDark()?'dark':'light')+'.mp4');if(!r.ok)throw 0;
+      await d.save({filename:'cpc-feature-explainers.mp4',data:await r.blob()});b.textContent='Saved'}
+    catch(e){b.textContent=e&&e.code==='declined'?lab:'Could not save the video'}
+    setTimeout(()=>{b.textContent=lab;b.disabled=false},2500)};
+})();
+addEventListener('hashchange',route);route();
+</script>
+
+</body></html>
